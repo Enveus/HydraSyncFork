@@ -219,13 +219,19 @@ let addRoleToMember = async (member, roleId) => {
     const mainServer = await client.guilds.fetch(config.mainServer);
     const serverCommandWasInRoleToAdd = await member.guild.roles.fetch(roleId);
 
-    const mainServerMember = await mainServer.members.fetch(member.id);
+    try{
+    	const mainServerMember = await mainServer.members.fetch(member.id);
+    } catch (err) {
+    return;
+  }
     const mainServerRoleToAdd = mainServer.roles.cache.find(r => r.name === serverCommandWasInRoleToAdd.name);
 
-    await member.roles.add(serverCommandWasInRoleToAdd);
-    await mainServerMember.roles.add(mainServerRoleToAdd);
+    //await member.roles.add(serverCommandWasInRoleToAdd); (REMOVED DUE TO ERROR PROBABLY FOR MANUAL COMMAND)
+    if(mainServerRoleToAdd){
+    	await mainServerMember.roles.add(mainServerRoleToAdd)
+    		return { success: true, message: `Added ${mainServerRoleToAdd?.name} to ${mainServerMember.user.username} in ${mainServer.name}` };
+    };
 
-    return { success: true, message: `Added ${mainServerRoleToAdd.name} to ${mainServerMember.user.username} in ${mainServer.name}` };
   } catch (err) {
     console.error(err);
     return { success: false, message: 'There was an error while adding the role.' };
@@ -250,19 +256,23 @@ let handleAddRoleInteraction = async (interaction, member, roleId) => {
   }
 };
 
-let removeRoleFromMember = async (member, roleId) => {
+let removeRoleFromMember = async (member, roleName) => {
   try {
     const mainServer = await client.guilds.fetch(config.mainServer);
     const mainServerRoles = await mainServer.roles.fetch();
-    const serverCommandWasInRoleToRemove = member.roles.resolve(roleId);
 
-    const mainServerMember = await mainServer.members.fetch(member.id);
-    const mainServerRoleToRemove = mainServerRoles.find(r => r.name === serverCommandWasInRoleToRemove.name);
+    try{
+    	const mainServerMember = await mainServer.members.fetch(member.id);
+    } catch (err) {
+    return;
+  }
+    const mainServerRoleToRemove = mainServerRoles.find(r => r.name === roleName);
 
-    await member.roles.remove(serverCommandWasInRoleToRemove);
-    await mainServerMember.roles.remove(mainServerRoleToRemove);
+    if(mainServerRoleToRemove){
+    	await mainServerMember.roles.remove(mainServerRoleToRemove)
+    		return { success: true, message: `Removed ${mainServerRoleToRemove?.name} from ${mainServerMember.user.username} in ${mainServer.name}` };
+    };
 
-    return { success: true, message: `Removed ${mainServerRoleToRemove.name} from ${mainServerMember.user.username} in ${mainServer.name}` };
   } catch (err) {
     console.error(err);
     return { success: false, message: 'There was an error while removing the role.' };
@@ -325,7 +335,7 @@ client.on("guildMemberUpdate", async (oldMember, newMember) => {
     if (oldRoles.length > newRoles.length) {
       let roleToRemoveId = oldRoles.filter((id) => !newRoles.includes(id))[0];
       if (roleToRemoveId) {
-        result = await removeRoleFromMember(newMember, oldMember.roles.cache.get(roleToRemoveId).id);
+        result = await removeRoleFromMember(newMember, oldMember.roles.cache.get(roleToRemoveId).name);
       }
     } else if (oldRoles.length < newRoles.length) {
       let roleToAddId = newRoles.filter((id) => !oldRoles.includes(id))[0];
