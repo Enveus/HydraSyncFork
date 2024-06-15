@@ -218,15 +218,14 @@ let addRoleToMember = async (member, roleId) => {
   try {
     const mainServer = await client.guilds.fetch(config.mainServer);
     const serverCommandWasInRoleToAdd = await member.guild.roles.fetch(roleId);
-
+let mainServerMember;
     try{
-    	const mainServerMember = await mainServer.members.fetch(member.id);
+    	mainServerMember = await mainServer.members.fetch(member.id);
     } catch (err) {
     return;
   }
     const mainServerRoleToAdd = mainServer.roles.cache.find(r => r.name === serverCommandWasInRoleToAdd.name);
 
-    //await member.roles.add(serverCommandWasInRoleToAdd); (REMOVED DUE TO ERROR PROBABLY FOR MANUAL COMMAND)
     if(mainServerRoleToAdd){
     	await mainServerMember.roles.add(mainServerRoleToAdd)
     		return { success: true, message: `Added ${mainServerRoleToAdd?.name} to ${mainServerMember.user.username} in ${mainServer.name}` };
@@ -260,9 +259,10 @@ let removeRoleFromMember = async (member, roleName) => {
   try {
     const mainServer = await client.guilds.fetch(config.mainServer);
     const mainServerRoles = await mainServer.roles.fetch();
-
+let mainServerMember;
     try{
-    	const mainServerMember = await mainServer.members.fetch(member.id);
+    	mainServerMember = await mainServer.members.fetch(member.id);
+    	
     } catch (err) {
     return;
   }
