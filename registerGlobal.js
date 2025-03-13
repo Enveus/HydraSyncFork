@@ -1,12 +1,20 @@
 import { REST } from "@discordjs/rest";
 import { Routes } from "discord-api-types/v9";
+import { PermissionFlagsBits } from "discord-api-types/v10";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 var config = require('./config.json')
 
+// Helper function to get default permissions
+const getDefaultPermissions = () => {
+  // If allowedRoleId is not set, default to server administrators only
+  return config.allowedRoleName ? "0" : PermissionFlagsBits.Administrator.toString();
+};
+
 const commands = [{
   name: 'add',
   description: 'Will add the role to the user in both servers.',
+  default_member_permissions: getDefaultPermissions(),
   options: [{
         "name": "role",
         "description": "The role to add in both servers",
@@ -22,6 +30,7 @@ const commands = [{
 }, {
     name: 'remove',
     description: 'Will remove the role from the user in both servers.',
+    default_member_permissions: getDefaultPermissions(),
     options: [{
           "name": "role",
           "description": "The role to remove in both servers",
@@ -38,6 +47,7 @@ const commands = [{
     "name": "role-checker",
     "type": 1,
     "description": "A role checker to compare roles between the main server and synced servers.",
+    "default_member_permissions": getDefaultPermissions(),
     "options": [
         {
             "name": "option",

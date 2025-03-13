@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HydraSync UI</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HydraSync UI</h1>
+            <div class="mode-selector">
+                <select id="sync-mode">
+                    <option value="main-to-many">Main → Many</option>
+                    <option value="many-to-main">Many to Main</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <div class="sync-container">
+                <div class="main-server-container">
+                    <h2>Main Server</h2>
+                    <div class="server-card main-server">
+                        <div class="server-selector">
+                        <button id="add-main-server" class="add-server-btn">
+                            <i class="fas fa-plus"></i> Select Server
+                        </button>
+                    </div>
+                    <div class="server-details" style="display: none;">
+                        <div class="server-name">
+                            <span id="main-server-name">Server Name</span>
+                            <button id="remove-main-server" class="remove-server-btn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="roles-container">
+                            <h3>Roles</h3>
+                            <ul id="main-server-roles" class="role-list">
+                                <!-- Roles will be added here dynamically -->
+                            </ul>
+                            <button class="add-role-btn">
+                                <i class="fas fa-plus"></i> Add Role
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="direction-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+
+                <div class="synced-servers-container">
+                    <h2>Synced Servers</h2>
+                    <div id="synced-servers" class="synced-servers">
+                        <!-- Synced server cards will be added here dynamically -->
+                        <div class="server-card synced-server-template" style="display: none;">
+                            <div class="server-selector">
+                                <button class="add-server-btn">
+                                    <i class="fas fa-plus"></i> Select Server
+                                </button>
+                            </div>
+                            <div class="server-details" style="display: none;">
+                                <div class="server-name">
+                                    <span class="synced-server-name">Server Name</span>
+                                    <button class="remove-server-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="roles-container">
+                                    <h3>Roles</h3>
+                                    <ul class="role-list synced-server-roles">
+                                        <!-- Roles will be added here dynamically -->
+                                    </ul>
+                                    <button class="add-role-btn">
+                                        <i class="fas fa-plus"></i> Add Role
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="add-synced-server" class="add-synced-server-btn">
+                        <i class="fas fa-plus"></i> Add Synced Server
+                    </button>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="save-config" class="save-btn">Save Configuration</button>
+            </div>
+        </main>
+
+        <!-- Server Selection Modal -->
+        <div id="server-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Select Server</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <ul id="server-list" class="server-list">
+                        <!-- Server list will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Selection Modal -->
+        <div id="role-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Select Role</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <ul id="role-list" class="role-list">
+                        <!-- Role list will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync ID Selection Modal -->
+        <div id="sync-id-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Select Sync ID</h2>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="sync-id-description">Select a Sync ID for this role. Roles with the same Sync ID will be linked across servers.</p>
+                    <div id="single-sync-id-selector" class="sync-id-selector">
+                        <select id="sync-id-select">
+                            <option value="">None</option>
+                            <!-- Options 1-50 will be added dynamically -->
+                        </select>
+                    </div>
+                    <div id="multiple-sync-id-selector" class="sync-id-selector multiple" style="display: none;">
+                        <div class="sync-id-checkboxes">
+                            <!-- Checkboxes for IDs 1-50 will be added dynamically -->
+                        </div>
+                    </div>
+                    <div class="sync-id-actions">
+                        <button id="save-sync-id" class="save-btn">Save</button>
+                        <button id="cancel-sync-id" class="cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js" type="module"></script>
+</body>
+</html>
