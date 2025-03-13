@@ -27,37 +27,63 @@ The bot requires a `config.json` file with the following information:
     "mainServer": "MAIN SERVER ID HERE",
     "syncedServers": ["SYNCED SERVER ID 1", "SYNCED SERVER ID 2"],
     "allowedRoleId": "ROLE ID FOR PERMISSIONS",
-    "allowedRoleName": "ROLE NAME FOR PERMISSIONS (for reverse mode)",
     "logChannelId": "LOG CHANNEL ID HERE (in main server)"
 }
 ```
 
 ### Starting the Bot
 
-**For Regular Mode** (Main → Synced):
+**Using npm scripts** (Recommended):
+
+For Regular Mode (Main → Synced):
 ```
-node MainToSync.js
+npm run start
 ```
 
-**For Reverse Mode** (Synced → Main):
+For Reverse Mode (Synced → Main):
 ```
-node SyncedToMain.js
-```
-
-These simplified startup scripts will automatically register the appropriate commands and start the bot in the selected mode.
-
-**Advanced Users**: If you prefer to run the commands separately:
-
-Regular Mode:
-```
-node register.js
-node run.js
+npm run start:reverse
 ```
 
-Reverse Mode:
+**Using the CLI directly**:
+
+For Regular Mode (Main → Synced):
 ```
-node registerGlobal.js
-node runReverse.js
+node bin/syncbot.js start
+```
+
+For Reverse Mode (Synced → Main):
+```
+node bin/syncbot.js start-reverse
+```
+
+**Registering Commands**:
+
+Register commands for the main server:
+```
+npm run register
+```
+
+Register commands globally:
+```
+npm run register:global
+```
+
+**With UI Dashboard**:
+
+Start the bot with UI dashboard:
+```
+npm run start:ui
+```
+
+Start the bot with UI dashboard and open in browser:
+```
+npm run start:ui:browser
+```
+
+Start only the UI dashboard:
+```
+npm run ui
 ```
 
 ## 💻 Commands
@@ -66,12 +92,12 @@ SyncBot provides the following slash commands:
 
 ### `/add @role @user`
 Adds the specified role to the user across all synchronized servers.
-- **Permissions**: Requires the role specified in `allowedRoleId`/`allowedRoleName` or server owner
+- **Permissions**: Requires the role specified in `allowedRoleId` or server owner
 - **Example**: `/add @Subscriber @JohnDoe`
 
 ### `/remove @role @user`
 Removes the specified role from the user across all synchronized servers.
-- **Permissions**: Requires the role specified in `allowedRoleId`/`allowedRoleName` or server owner
+- **Permissions**: Requires the role specified in `allowedRoleId` or server owner
 - **Example**: `/remove @Subscriber @JohnDoe`
 
 ### `/role-checker [option]`
@@ -79,7 +105,7 @@ Analyzes role discrepancies between servers and optionally force-syncs roles.
 - **Options**:
   - `analyze`: Sends you a DM with a detailed analysis of role discrepancies
   - `force-sync`: Forces all roles to sync according to the bot's mode
-- **Permissions**: Requires the role specified in `allowedRoleId`/`allowedRoleName` or server owner
+- **Permissions**: Requires the role specified in `allowedRoleId` or server owner
 - **Example**: `/role-checker analyze`
 
 ## 🔄 Automatic Synchronization
@@ -102,13 +128,45 @@ Analyzes role discrepancies between servers and optionally force-syncs roles.
 | User joins main server | Roles from synced servers are applied |
 | User joins synced server | No action |
 | User leaves main server | No action |
-| User leaves synced server | Roles from that server are removed in main server |
+| User leaves synced server | Roles from that server are removed in main server (only if not present in other synced servers) |
 | Role added in synced server | Role is added in main server |
-| Role removed in synced server | Role is removed in main server |
+| Role removed in synced server | Role is removed in main server (only if not present in other synced servers) |
+
+## 🆕 Sync ID Feature
+
+SyncBot now supports Sync IDs for more flexible role linking:
+
+1. **What are Sync IDs?**: Unique identifiers (1-50) that link roles across servers
+2. **How it works**: Roles with the same Sync ID are treated as linked, regardless of name
+3. **Benefits**:
+   - Roles can have different names across servers
+   - More precise control over which roles are linked
+   - Smarter role removal that preserves roles if present in other synced servers
+4. **Configuration**: Sync IDs can be configured through the UI dashboard
+
+## 🌐 UI Dashboard
+
+SyncBot includes a web-based UI dashboard for easier configuration:
+
+1. **Features**:
+   - Server management (add/remove servers)
+   - Role management (add/remove roles)
+   - Sync ID configuration
+   - Mode selection (Regular/Reverse)
+   - Status monitoring
+
+2. **Access**:
+   - Start with UI: `npm run start:ui`
+   - Start with UI and open browser: `npm run start:ui:browser`
+   - UI only: `npm run ui`
+
+3. **Configuration**:
+   - Changes made in the UI are saved to `ui-config.json`
+   - The bot automatically merges this with `config.json`
 
 ## ⚠️ Important Notes
 
-1. **Role Names Must Match**: The bot identifies roles by name, so ensure role names match exactly across servers
+1. **Role Linking**: Roles are linked by Sync ID (if configured) or by name
 2. **Role Hierarchy**: The bot cannot modify roles higher than its own role in the hierarchy
 3. **Permissions**: The bot requires "Manage Roles" permission in all servers
 4. **Performance**: The role-checker command can be resource-intensive for large servers
@@ -118,10 +176,18 @@ Analyzes role discrepancies between servers and optionally force-syncs roles.
 
 ### Common Issues:
 
-- **Roles not syncing**: Ensure role names match exactly across servers
+- **Roles not syncing**: Ensure roles are properly linked by Sync ID or have matching names
 - **Permission errors**: Check that the bot's role is higher than roles it's managing
 - **Bot not responding**: Verify the bot is running and has proper permissions
 - **Command not working**: Ensure you have the allowed role specified in the config
+- **UI not showing real data**: Make sure the bot is running with the `--ui` flag
+
+### Debug Mode:
+
+Run the bot in debug mode for more detailed logging:
+```
+npm run debug
+```
 
 ### For detailed logs and errors:
 
