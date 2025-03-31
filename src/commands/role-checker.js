@@ -322,68 +322,87 @@ export const roleCheckerReverse = async (interaction, forceSync, client, state) 
                 const membersRolesInFetchedServer = memberInFetchedServer.roles.cache;
                 const membersRolesInFetchedServerAsStrings = membersRolesInFetchedServer.map((role) => role.name);
                 
-                // Roles that need removed from the user in the fetched server to match the roles the user has in the main server
-                const rolesCollectionToRemoveInThisServer = membersRolesInFetchedServer.filter(
+                // In reverse mode, we need to sync from synced servers to main server
+                // So the logic is reversed compared to regular mode
+                
+                // Roles that need added to the main server to match the roles the user has in the synced server
+                const rolesCollectionToAddToMainServer = membersRolesInFetchedServer.filter(
                   (r) => !memberMainServerRolesArrayStrings.includes(r.name)
                 );
                 
-                // Roles that need added to the user in the fetched server to match the roles the user has in the main server
-                const rolesCollectionToAddInThisServer = memberMainserverRolesCollection
-                  .filter((r) => !membersRolesInFetchedServerAsStrings.includes(r.name))
-                  // must map the role over to the one in synced server for add
-                  .map(
-                    (role) => fetchedServerRoles.find((r) => r.name === role.name) || role
-                  );
+                // Roles that need removed from the main server if they don't exist in the synced server
+                const rolesCollectionToRemoveFromMainServer = memberMainserverRolesCollection
+                  .filter((r) => !membersRolesInFetchedServerAsStrings.includes(r.name));
 
-                const rolesToRemoveInThisServer = [...rolesCollectionToRemoveInThisServer.values()];
-                const rolesToAddInThisServer = [...rolesCollectionToAddInThisServer.values()];
+                const rolesToAddToMainServer = [...rolesCollectionToAddToMainServer.values()];
+                const rolesToRemoveFromMainServer = [...rolesCollectionToRemoveFromMainServer.values()];
                 
-                if (rolesToRemoveInThisServer.length > 0 || rolesToAddInThisServer.length > 0) {
+                if (rolesToAddToMainServer.length > 0 || rolesToRemoveFromMainServer.length > 0) {
                   hasDifferingRoles = true;
-                  const remove = forceSync ? "rolesRemovedToMatchMainserver" : "rolesToRemoveToMatchMainserver";
-                  const add = forceSync ? "rolesAddedToMatchMainserver" : "rolesToAddToMatchMainServer";
+                  const add = forceSync ? "rolesAddedToMainServer" : "rolesToAddToMainServer";
+                  const remove = forceSync ? "rolesRemovedFromMainServer" : "rolesToRemoveFromMainServer";
                   
-                  if (rolesToRemoveInThisServer.length > 0 && rolesToAddInThisServer.length === 0) {
+                  if (rolesToAddToMainServer.length > 0 && rolesToRemoveFromMainServer.length === 0) {
+                    if (forceSync) {
+                      // Find matching roles in main server by name
+                      const mainServerRolesToAdd = rolesToAddToMainServer
+                        .map(role => {
+                          const mainRole = mainServerRoles.find(r => r.name === role.name);
+                          return mainRole;
+                        })
+                        .filter(role => role !== undefined);
+                      
+                      if (mainServerRolesToAdd.length > 0) {
+                        await withRateLimitHandling(async () => {
+                          await member.roles.add(mainServerRolesToAdd);
+                        });
+                      }
+                    }
+
+                    memberObj.serversWithDifferingRoles.push({
+                      serverName: fetchedServer.name,
+                      [`${add}`]: rolesToAddToMainServer.map((role) => role.name),
+                    });
+                  }
+                  
+                  if (rolesToRemoveFromMainServer.length > 0 && rolesToAddToMainServer.length === 0) {
                     if (forceSync) {
                       await withRateLimitHandling(async () => {
-                        await memberInFetchedServer.roles.remove(rolesCollectionToRemoveInThisServer);
+                        await member.roles.remove(rolesToRemoveFromMainServer);
                       });
                     }
 
                     memberObj.serversWithDifferingRoles.push({
                       serverName: fetchedServer.name,
-                      [`${remove}`]: rolesToRemoveInThisServer.map((role) => role.name),
+                      [`${remove}`]: rolesToRemoveFromMainServer.map((role) => role.name),
                     });
                   }
                   
-                  if (rolesToAddInThisServer.length > 0 && rolesToRemoveInThisServer.length === 0) {
+                  if (rolesToAddToMainServer.length > 0 && rolesToRemoveFromMainServer.length > 0) {
                     if (forceSync) {
-                      await withRateLimitHandling(async () => {
-                        await memberInFetchedServer.roles.add(rolesCollectionToAddInThisServer);
-                      });
-                    }
-
-                    memberObj.serversWithDifferingRoles.push({
-                      serverName: fetchedServer.name,
-                      [`${add}`]: rolesToAddInThisServer.map((role) => role.name),
-                    });
-                  }
-                  
-                  if (rolesToAddInThisServer.length > 0 && rolesToRemoveInThisServer.length > 0) {
-                    if (forceSync) {
-                      await withRateLimitHandling(async () => {
-                        await memberInFetchedServer.roles.remove(rolesCollectionToRemoveInThisServer);
-                      });
+                      // Find matching roles in main server by name
+                      const mainServerRolesToAdd = rolesToAddToMainServer
+                        .map(role => {
+                          const mainRole = mainServerRoles.find(r => r.name === role.name);
+                          return mainRole;
+                        })
+                        .filter(role => role !== undefined);
                       
                       await withRateLimitHandling(async () => {
-                        await memberInFetchedServer.roles.add(rolesCollectionToAddInThisServer);
+                        await member.roles.remove(rolesToRemoveFromMainServer);
                       });
+                      
+                      if (mainServerRolesToAdd.length > 0) {
+                        await withRateLimitHandling(async () => {
+                          await member.roles.add(mainServerRolesToAdd);
+                        });
+                      }
                     }
 
                     memberObj.serversWithDifferingRoles.push({
                       serverName: fetchedServer.name,
-                      [`${remove}`]: rolesToRemoveInThisServer.map((role) => role.name),
-                      [`${add}`]: rolesToAddInThisServer.map((role) => role.name),
+                      [`${add}`]: rolesToAddToMainServer.map((role) => role.name),
+                      [`${remove}`]: rolesToRemoveFromMainServer.map((role) => role.name),
                     });
                   }
                 }
